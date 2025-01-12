@@ -109,26 +109,35 @@ def load_optimized_csv():
         print(f"Error loading CSV: {str(e)}")
         return None
 
-def open_ons_maps(postcode: str, df: pd.DataFrame) -> None:
-    """Open ONS maps for the given postcode."""
+def get_oa_from_postcode(postcode, df):
+    """Get Output Area code for a postcode."""
+    # Remove spaces and convert to uppercase
+    postcode = postcode.replace(" ", "").upper()
+    
+    # Look up the postcode
+    result = df[df['clean_pcd'] == postcode]
+    
+    if len(result) == 0:
+        raise Exception(f"Postcode {postcode} not found in dataset")
+    
+    # Get the OA code
+    oa_code = result.iloc[0]['oa21cd']
+    print(f"Found Output Area code: {oa_code}")
+    return oa_code
+
+def open_ons_maps(postcode, df):
     try:
-        # Clean postcode for lookup
-        clean_postcode = postcode.replace(" ", "").upper()
+        oa_code = get_oa_from_postcode(postcode, df)
         
-        # Look up the postcode
-        result = df[df['clean_pcd'] == clean_postcode]
+        # Format postcode for URL (replace spaces with +)
+        url_postcode = postcode.replace(" ", "+").lower()
         
-        if len(result) == 0:
-            raise Exception(f"Postcode {postcode} not found in database")
-        
-        # Get the OA code
-        oa_code = result.iloc[0]['oa21cd']
-        
-        # Base URLs for the three visualizations
+        # Base URLs for all visualizations
         urls = [
+            f"https://find-energy-certificate.service.gov.uk/find-a-certificate/search-by-postcode?postcode={url_postcode}",
             f"https://www.ons.gov.uk/census/maps/choropleth/identity/ethnic-group/ethnic-group-tb-6a/white?oa={oa_code}",
-            f"https://www.ons.gov.uk/census/maps/choropleth/housing/tenure-of-household/hh-tenure-5a/rented-social-rented?oa={oa_code}",
-            f"https://www.ons.gov.uk/census/maps/choropleth/population/household-deprivation/hh-deprivation/household-is-not-deprived-in-any-dimension?oa={oa_code}"
+            f"https://www.ons.gov.uk/census/maps/choropleth/population/household-deprivation/hh-deprivation/household-is-not-deprived-in-any-dimension?oa={oa_code}",
+            f"https://www.ons.gov.uk/census/maps/choropleth/housing/tenure-of-household/hh-tenure-5a/rented-social-rented?oa={oa_code}"
         ]
         
         # Open each URL in a new tab
