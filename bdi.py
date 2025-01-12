@@ -122,7 +122,6 @@ def get_oa_from_postcode(postcode, df):
     
     # Get the OA code
     oa_code = result.iloc[0]['oa21cd']
-    print(f"Found Output Area code: {oa_code}")
     return oa_code
 
 def open_ons_maps(postcode, df):
